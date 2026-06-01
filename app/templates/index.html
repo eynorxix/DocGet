@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DocGent</title>
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<div class="app">
+  {% include 'partials/_header.html' %}
+  <div class="body">
+    {% include 'partials/_sidebar.html' %}
+    <main class="main">
+      {% include 'partials/_workspace.html' %}
+      {% include 'partials/_input.html' %}
+    </main>
+  </div>
+</div>
+
+{% include 'partials/_file_inputs.html' %}
+{% include 'partials/_modals.html' %}
+{% include 'partials/_lightbox.html' %}
+
+<script src="/static/js/app.js"></script>
+</body>
+</html>

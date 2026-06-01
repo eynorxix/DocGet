@@ -1,0 +1,25 @@
+<div class="input-area">
+  <div class="input-row">
+    <div class="input-wrap">
+      <textarea id="promptInput" rows="1" placeholder="Chatea con DocGent: crea skills, genera documentos..." oninput="autoResize(this)" onkeydown="handleKey(event)"></textarea>
+    </div>
+    <button class="btn-send" onclick="handleSend()">~&gt;</button>
+  </div>
+  <div class="input-actions">
+    <div class="circle-btn" id="dropZone" onclick="toggleBtn(event,this,'file')">
+      <span class="circle-dot doc"></span>
+      <span class="circle-label">Documentos</span>
+      <span class="circle-tooltip">Subir archivos como contexto del documento</span>
+    </div>
+    <div class="circle-btn" onclick="toggleBtn(event,this,'skill')">
+      <span class="circle-dot skill"></span>
+      <span class="circle-label">Skill</span>
+      <span class="circle-tooltip">Seleccionar skill para el documento</span>
+    </div>
+    <div class="circle-btn generate-btn" onclick="handleGenerateDirect(event)">
+      <span class="circle-dot gen"></span>
+      <span class="circle-label">Generar</span>
+      <span class="circle-tooltip">Generar documento directo con informacion de internet</span>
+    </div>
+  </div>
+</div>

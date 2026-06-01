@@ -1,0 +1,229 @@
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h2>nueva skill</h2>
+    <div class="form-group">
+      <label>nombre</label>
+      <input id="skillName" placeholder="ej: Documento Tecnico IoT">
+    </div>
+    <div class="form-group">
+      <label>descripcion</label>
+      <input id="skillDesc" placeholder="Para que sirve esta skill">
+    </div>
+    <div class="form-group">
+      <label>tipo</label>
+      <select id="skillType">
+        <option value="md">markdown (.md)</option>
+        <option value="py">python (.py)</option>
+        <option value="txt">texto (.txt)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>contenido / estructura</label>
+      <textarea id="skillContent" rows="8" placeholder="Define la estructura del documento usando Markdown..."></textarea>
+      <div style="margin-top:6px;display:flex;gap:6px;align-items:center">
+        <div style="flex:1;padding:6px 10px;border:1px dashed var(--border);border-radius:4px;font-size:12px;color:var(--text3);text-align:center;cursor:pointer;transition:all .15s" id="skillDropZone" onclick="document.getElementById('skillFileInput').click()">o arrastra un archivo .md / .py / .txt aqui</div>
+        <button class="ghost" style="padding:6px 12px;font-size:12px;border-radius:4px;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text2);font-family:var(--font);transition:all .12s" onclick="document.getElementById('skillFileInput').click()">subir</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeModal()">cancelar</button>
+      <button class="primary" onclick="createSkill()">crear skill</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="editSkillOverlay">
+  <div class="modal">
+    <h2>editar skill</h2>
+    <div class="form-group">
+      <label>nombre</label>
+      <input id="editSkillName" placeholder="Nombre de la skill">
+    </div>
+    <div class="form-group">
+      <label>descripcion</label>
+      <input id="editSkillDesc" placeholder="Descripcion de la skill">
+    </div>
+    <div class="form-group">
+      <label>tipo</label>
+      <select id="editSkillType">
+        <option value="md">markdown (.md)</option>
+        <option value="py">python (.py)</option>
+        <option value="txt">texto (.txt)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>contenido</label>
+      <textarea id="editSkillContent" rows="10" placeholder="Contenido de la skill..."></textarea>
+    </div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="danger" id="deleteSkillBtn" onclick="confirmDeleteSkill()">eliminar</button>
+      <div>
+        <button class="ghost" onclick="closeEditSkillModal()">cancelar</button>
+        <button class="primary" onclick="applySkillChanges()">aplicar cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="apiKeysOverlay">
+  <div class="modal api-keys-modal">
+    <h2>API Keys</h2>
+    <div class="desc">
+      Agrega hasta 4 API keys de Gemini. Si una alcanza su cuota, el sistema usa la siguiente autom&aacute;ticamente para evitar interrupciones.
+    </div>
+    <div class="desc" style="border-left-color:var(--warn);margin-bottom:14px">
+      <strong>Importante:</strong> Las API keys de una misma cuenta Google comparten el mismo l&iacute;mite de cuota gratuita. Si todas son de la misma cuenta, se agotar&aacute;n al mismo tiempo. Para que la rotaci&oacute;n funcione, usa keys de al menos <strong>2 cuentas Google distintas</strong>.<br><br>
+      Genera tus keys gratis en:
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:var(--accent);text-decoration:underline">aistudio.google.com/app/apikey</a>
+    </div>
+    <div class="form-group">
+      <label>key 1 (principal)</label>
+      <div class="key-row">
+        <span class="key-index">1</span>
+        <input type="password" id="apiKey1" placeholder="pega tu API key..." oninput="this.classList.toggle('filled',this.value.trim()!=='')">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>key 2 (respaldo)</label>
+      <div class="key-row">
+        <span class="key-index">2</span>
+        <input type="password" id="apiKey2" placeholder="opcional" oninput="this.classList.toggle('filled',this.value.trim()!=='')">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>key 3 (respaldo)</label>
+      <div class="key-row">
+        <span class="key-index">3</span>
+        <input type="password" id="apiKey3" placeholder="opcional" oninput="this.classList.toggle('filled',this.value.trim()!=='')">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>key 4 (respaldo)</label>
+      <div class="key-row">
+        <span class="key-index">4</span>
+        <input type="password" id="apiKey4" placeholder="opcional" oninput="this.classList.toggle('filled',this.value.trim()!=='')">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeApiKeysModal()">cancelar</button>
+      <button class="primary" onclick="applyApiKeys()">aplicar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="skillSelectOverlay">
+  <div class="modal">
+    <h2>seleccionar skill</h2>
+    <div id="skillSelectList" class="skill-select-list">
+      <p style="color:var(--text3)">Cargando skills...</p>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeSkillSelectModal()">cancelar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="genModal">
+  <div class="modal">
+    <h2>generar documento</h2>
+    <div class="form-group">
+      <label>skill</label>
+      <input id="genSkillId" type="hidden">
+      <input id="genSkillDisplay" readonly style="background:var(--surface);color:var(--text2)">
+    </div>
+    <div class="form-group">
+      <label>titulo</label>
+      <input id="docTitle" placeholder="Titulo del proyecto">
+    </div>
+    <div class="flex">
+      <div class="form-group">
+        <label>autor</label>
+        <input id="docAuthor" placeholder="Nombre">
+      </div>
+      <div class="form-group">
+        <label>tutor</label>
+        <input id="docTutor" placeholder="Nombre">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>instrucciones adicionales</label>
+      <textarea id="docInput" rows="3" placeholder="Que contenido debe tener el documento..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeGenModal()">cancelar</button>
+      <button class="primary" onclick="confirmGenerate()">generar .docx</button>
+    </div>
+  </div>
+</div>
+
+<div class="welcome-overlay" id="welcomeOverlay">
+  <div class="welcome-box">
+    <div class="welcome-title">DOCGENT</div>
+    <div class="welcome-sub">generador de documentos .docx con IA</div>
+    <div class="welcome-body">
+      <p>Sistema de generaci&oacute;n de documentos acad&eacute;micos basado en skills (plantillas) y archivos existentes, con inteligencia artificial para estructurar y redactar el contenido.</p>
+      <p>Permite crear, editar y gestionar skills, subir archivos de referencia y generar documentos <code>.docx</code> con formato APA 7.</p>
+      <p class="warn">El uso del sistema es responsabilidad del usuario. No se almacenan API keys en el servidor.</p>
+      <p class="warn" style="margin-top:12px">Para usar la IA necesitas configurar al menos una API key de Gemini. Ve al panel lateral derecho &gt; acciones &gt; API keys para agregarlas.</p>
+    </div>
+    <div class="welcome-actions">
+      <button class="btn-accept" onclick="acceptWelcome()">[ aceptar ]</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="donateOverlay">
+  <div class="modal donate-modal">
+    <div class="donate-heart">❤️</div>
+    <h2>+ Doname</h2>
+    <div class="donate-desc">
+      DocGent es un proyecto de código abierto en constante evolución.<br>
+      Si te resulta útil, considera donar para ayudar con costos de hosting, APIs y desarrollo.<br>
+      <strong>¡Cada aporte, por pequeño que sea, hace crecer el proyecto!</strong>
+    </div>
+    <div class="donate-qrs">
+      <div class="donate-qr-item">
+        <img src="/assets/cripto/Bitcoin.jpg" class="qr-img" alt="Bitcoin QR" onclick="openLightbox(this)">
+        <div class="qr-label">Bitcoin</div>
+        <div class="qr-code">bc1q67aw0uuw2s4zq2cyp97qpnpf8zhusyvr5dzm2w</div>
+        <button class="qr-copy" onclick="copyCode(this,'bc1q67aw0uuw2s4zq2cyp97qpnpf8zhusyvr5dzm2w')">copiar</button>
+      </div>
+      <div class="donate-qr-item">
+        <img src="/assets/cripto/Polygon.jpg" class="qr-img" alt="Polygon QR" onclick="openLightbox(this)">
+        <div class="qr-label">Polygon</div>
+        <div class="qr-code">0x6bDb191A11B247fDCCFFD66fe6092969Ab549378</div>
+        <button class="qr-copy" onclick="copyCode(this,'0x6bDb191A11B247fDCCFFD66fe6092969Ab549378')">copiar</button>
+      </div>
+      <div class="donate-qr-item">
+        <img src="/assets/cripto/BnBChain.jpg" class="qr-img" alt="BNB Chain QR" onclick="openLightbox(this)">
+        <div class="qr-label">BNB Chain</div>
+        <div class="qr-code">0x6bDb191A11B247fDCCFFD66fe6092969Ab549378</div>
+        <button class="qr-copy" onclick="copyCode(this,'0x6bDb191A11B247fDCCFFD66fe6092969Ab549378')">copiar</button>
+      </div>
+    </div>
+    <div class="donate-thanks">
+      <div class="big-heart">❤️</div>
+      Gracias de corazón a todos los que donan.<br>
+      Su generosidad mantiene este proyecto vivo y en mejora constante.
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closeDonateModal()">cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="previewOverlay">
+  <div class="modal preview-modal">
+    <div class="preview-header">
+      <span class="preview-filename" id="previewFilename"></span>
+      <span class="preview-size" id="previewSize"></span>
+    </div>
+    <div class="preview-content" id="previewContent">
+      <div class="preview-empty">Cargando...</div>
+    </div>
+    <div class="preview-actions">
+      <button class="ghost" onclick="closePreviewModal()">volver</button>
+      <a class="btn-inline" id="previewDownloadBtn" target="_blank" style="margin-left:auto">descargar</a>
+    </div>
+  </div>
+</div>

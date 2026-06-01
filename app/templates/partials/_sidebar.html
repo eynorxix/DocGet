@@ -1,0 +1,65 @@
+<aside class="sidebar">
+  <div class="sidebar-scroll">
+    <div class="sidebar-group collapsible">
+      <h3 onclick="toggleSection(this)">recursos <span class="collapse-icon open">−</span></h3>
+      <div class="collapse-content open">
+        <div class="sidebar-item"><span style="color:var(--blue)">~</span> archivos <span class="num" id="fileCount">0</span></div>
+        <div class="sidebar-item"><span style="color:var(--purple)">#</span> skills <span class="num" id="skillCount">0</span></div>
+        <div class="sidebar-item"><span style="color:var(--orange)">+</span> documentos <span class="num" id="docCount">0</span></div>
+      </div>
+    </div>
+    <div class="sidebar-group collapsible">
+      <h3 onclick="toggleSection(this)">skills <span class="collapse-icon">+</span></h3>
+      <div class="collapse-content" id="quickSkillsWrap">
+        <div id="quickSkills"></div>
+      </div>
+    </div>
+    <div class="sidebar-group collapsible">
+      <h3 onclick="toggleSection(this)">acciones <span class="collapse-icon">+</span></h3>
+      <div class="collapse-content">
+        <div class="sidebar-item clickable" onclick="showCreateSkillModal()"><span class="plus">+</span> nueva skill</div>
+        <div class="sidebar-item clickable" onclick="document.getElementById('fileInput').click()"><span class="plus">+</span> subir archivo</div>
+        <div class="sidebar-item clickable" onclick="openApiKeysModal()"><span class="plus">+</span> API keys</div>
+      </div>
+    </div>
+    <div class="sidebar-group collapsible">
+      <h3 onclick="toggleSection(this)">carátula <span class="collapse-icon">+</span></h3>
+      <div class="collapse-content">
+        <div class="caratula-field">
+          <label>título</label>
+          <input id="caratulaTitulo" placeholder="Título del documento" oninput="saveCaratula()" onchange="saveCaratula()">
+        </div>
+        <div class="caratula-field">
+          <label>autor</label>
+          <input id="caratulaAutor" placeholder="Nombre del autor" oninput="saveCaratula()" onchange="saveCaratula()">
+        </div>
+        <div class="caratula-field">
+          <label>tutor</label>
+          <input id="caratulaTutor" placeholder="Nombre del tutor" oninput="saveCaratula()" onchange="saveCaratula()">
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-group collapsible">
+      <h3 onclick="toggleSection(this)">gemini keys <span class="collapse-icon">+</span></h3>
+      <div class="collapse-content">
+        <div id="sidebarKeyStatus" style="padding:0 8px;font-size:12px;color:var(--text3)">0 keys</div>
+      </div>
+    </div>
+    <div class="sidebar-group collapsible">
+      <h3 onclick="toggleSection(this)">demo <span class="collapse-icon">+</span></h3>
+      <div class="collapse-content">
+        <div class="sidebar-item clickable" onclick="generateDemoDoc()" style="font-size:12px;color:var(--accent)"><span class="plus">&#9654;</span> Documento .docx prueba</div>
+      </div>
+    </div>
+    <div class="sidebar-gif" id="sidebarGifContainer">
+      <img id="sidebarGif" src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExaXBoOGVzYzFrYzZic2t6aTBydmYxaG95Njdra3F3bG0weXJybzR5ZyZlcD12MV9naWZzX3NlYXJjaCZjdD1n/IKFVtPf8jP6KJH16dB/giphy.gif" alt="gif decorativo">
+      <div class="sidebar-gif-overlay" onclick="changeGif()">
+        <span>cambiar gif</span>
+      </div>
+    </div>
+    <div class="sidebar-group" style="margin-bottom:4px">
+      <h3>&nbsp;</h3>
+      <div class="sidebar-item" style="font-size:10px;color:var(--text3)">docgent v1</div>
+    </div>
+  </div>
+</aside>
