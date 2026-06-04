@@ -1,0 +1,12 @@
+{
+  "id": "docxix",
+  "name": "DocXIX",
+  "label": "defecto",
+  "universidad": "UNIVERSIDAD",
+  "sede": "SEDE",
+  "facultad": "FACULTAD",
+  "carrera": "CARRERA",
+  "tipo_universidad": "editar seccion",
+  "logo_path": "/assets/logo/logo.png",
+  "codigo_activacion": null
+}

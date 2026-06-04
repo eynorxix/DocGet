@@ -13,13 +13,14 @@ from fastapi.templating import Jinja2Templates
 from fastapi.responses import HTMLResponse
 import uvicorn
 
-from app.routers import skills, documents, chat
+from app.routers import skills, documents, chat, modelos
+from app.services import file_reader
 
 ASSETS_DIR = ROOT / "assets"
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
 app = FastAPI(
-    title="DocGent",
+    title="DocXIX",
     description="Generador de documentos .docx con Skills e IA",
     version="1.0.0",
 )
@@ -34,6 +35,17 @@ app.mount("/static", StaticFiles(directory=str(ROOT / "app" / "static")), name="
 app.include_router(skills.router)
 app.include_router(documents.router)
 app.include_router(chat.router)
+app.include_router(modelos.router)
+
+
+@app.on_event("startup")
+def cleanup_uploads():
+    import shutil
+    upload_dir = file_reader.UPLOAD_DIR
+    if upload_dir.exists():
+        for f in upload_dir.iterdir():
+            if f.is_file():
+                f.unlink()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -43,7 +55,7 @@ def index(request: Request):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "project": "DocGent"}
+    return {"status": "ok", "project": "DocXIX"}
 
 
 def main():

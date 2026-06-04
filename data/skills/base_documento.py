@@ -259,25 +259,33 @@ def configurar_primer_header_vacio(doc, section):
     for p in first_header.paragraphs:
         p.clear()
 
-def agregar_caratula(doc, titulo, autor, tutor, logo_path="/home/eynor/Documentos/Biblioteca/logoUnifranz/logounifranz.png"):
-    for _ in range(4):
-        doc.add_paragraph()
-    add_paragraph(doc, "UNIVERSIDAD PRIVADA FRANZ TAMAYO", bold=True, size=14, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=0, first_line_indent=0)
-    add_paragraph(doc, "SEDE EL ALTO", bold=True, size=14, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=0, first_line_indent=0)
-    add_paragraph(doc, "FACULTAD DE INGENIERIA", bold=True, size=14, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=0, first_line_indent=0)
-    add_paragraph(doc, "CARRERA DE INGENIERIA DE SISTEMAS", bold=True, size=14, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=10, first_line_indent=0)
+def agregar_caratula(doc, titulo, autor, tutor, logo_path=None, modelo=None):
+    if modelo is None:
+        modelo = {}
+    uni = modelo.get("universidad", "(llenar campo)")
+    sede = modelo.get("sede", "(llenar campo)")
+    facultad = modelo.get("facultad", "(llenar campo)")
+    carrera = modelo.get("carrera", "(llenar campo)")
+    logo = logo_path or modelo.get("logo_path") or "/home/eynor/Documentos/Biblioteca/logoUnifranz/logounifranz.png"
+    if not os.path.exists(logo):
+        logo = None
+    doc.add_paragraph()
+    add_paragraph(doc, uni, bold=True, size=14, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=0, first_line_indent=0)
+    add_paragraph(doc, sede, bold=True, size=14, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=0, first_line_indent=0)
+    add_paragraph(doc, facultad, bold=True, size=14, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=0, first_line_indent=0)
+    add_paragraph(doc, carrera, bold=True, size=14, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=10, first_line_indent=0)
     add_paragraph(doc, "PROYECTO", bold=True, size=12, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=10, first_line_indent=0)
-    if os.path.exists(logo_path):
+    if logo:
         p_logo = doc.add_paragraph()
         p_logo.alignment = WD_ALIGN_PARAGRAPH.CENTER
         run_logo = p_logo.add_run()
-        run_logo.add_picture(logo_path, width=Cm(7.04), height=Cm(6.68))
+        run_logo.add_picture(logo, width=Cm(7.04), height=Cm(6.68))
         p_logo.paragraph_format.space_after = Pt(35)
     add_paragraph(doc, f'"{titulo}"', bold=True, size=13, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_before=35, space_after=35, first_line_indent=0)
     add_paragraph(doc, f"AUTOR: {autor}", size=12, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_after=0, first_line_indent=0)
     add_paragraph(doc, f"TUTOR: {tutor}", size=12, alignment=WD_ALIGN_PARAGRAPH.CENTER, space_before=0, space_after=0, first_line_indent=0)
     doc.add_paragraph()
-    add_paragraph(doc, "EL ALTO - BOLIVIA\n2026", bold=True, size=12, alignment=WD_ALIGN_PARAGRAPH.CENTER, first_line_indent=0)
+    add_paragraph(doc, sede + "\n2026", bold=True, size=12, alignment=WD_ALIGN_PARAGRAPH.CENTER, first_line_indent=0)
 
 def agregar_toc(doc):
     p_toc = doc.add_paragraph()

@@ -1,0 +1,12 @@
+{
+  "id": "cangrejo",
+  "name": "Cangrejo",
+  "label": "personal",
+  "universidad": "UNIVERSIDAD PRIVADA FRANZ TAMAYO",
+  "sede": "SEDE EL ALTO",
+  "facultad": "FACULTAD DE INGENIERIA",
+  "carrera": "CARRERA DE INGENIERIA DE SISTEMAS",
+  "tipo_universidad": "privada",
+  "logo_path": "/home/eynor/Documentos/Biblioteca/logoUnifranz/logounifranz.png",
+  "codigo_activacion": "Cangrejo"
+}

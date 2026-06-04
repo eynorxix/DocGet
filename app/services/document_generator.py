@@ -44,11 +44,31 @@ def _add_formatted_paragraph(doc, text: str, style: str = "Normal", bold: bool =
     return p
 
 
-def generate_docx(title: str, author: str, tutor: str, skill_type: str, document_content: str, logo_path: str | None = None) -> Path:
+def _infer_title(document_content: str) -> str | None:
+    first_line = document_content.strip().split("\n")[0] if document_content else ""
+    title = first_line.replace("#", "").replace("*", "").replace('"', "").strip()
+    if title:
+        words = title.split()
+        if len(words) > 20:
+            title = " ".join(words[:20]) + "..."
+        return title
+    return None
+
+
+def generate_docx(title: str, author: str, tutor: str, skill_type: str, document_content: str, logo_path: str | None = None, modelo: dict | None = None) -> Path:
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
     if logo_path and not Path(logo_path).exists():
         logo_path = None
+
+    if not title or not title.strip():
+        title = _infer_title(document_content) or "Documento sin título"
+    
+    if not author or not author.strip():
+        author = "Sin asignar"
+    
+    if not tutor or not tutor.strip():
+        tutor = "Sin asignar"
 
     skill_base = SKILLS_DIR / "base_documento.py"
     if skill_base.exists():
@@ -65,10 +85,11 @@ def generate_docx(title: str, author: str, tutor: str, skill_type: str, document
         mod.configurar_header(doc, section, fmt="decimal", start=1, mostrar=False)
         mod.configurar_primer_header_vacio(doc, section)
 
-        mod.agregar_caratula(doc, title, author, tutor)
+        mod.agregar_caratula(doc, title, author, tutor, logo_path=logo_path, modelo=modelo)
 
         doc.add_page_break()
-        mod.add_heading_custom(doc, "CONTENIDO GENERADO", level=1)
+        mod.agregar_toc(doc)
+        doc.add_page_break()
 
         lines = document_content.split("\n")
         i = 0

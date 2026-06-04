@@ -156,9 +156,36 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="cajaNegraOverlay" onclick="if(event.target===this)closeCajaNegraModal()">
+  <div class="modal cajanegra-modal">
+    <h2>⬡ Caja Negra</h2>
+    <div class="desc" style="font-size:12px;color:var(--text3);line-height:1.6;margin-bottom:14px;padding:10px 12px;background:var(--surface);border-radius:4px;border-left:3px solid var(--accent)">
+      Arrastra archivos o carpetas para cargarlos al chat. Luego la IA los reconocerá y podrás pedirle que genere documentos con ellos.
+    </div>
+    <div class="cajanegra-dropzone" id="cajaNegraDropZone">
+      <div class="cajanegra-dropzone-icon">⬡</div>
+      <div class="cajanegra-dropzone-text">suelta archivos/carpetas aquí</div>
+      <div class="cajanegra-dropzone-hint">o haz clic para seleccionar</div>
+    </div>
+    <div id="cajaNegraFileList" class="cajanegra-filelist"></div>
+    <div class="cajanegra-actions">
+      <button class="ghost" type="button" onclick="document.getElementById('cajaNegraFileInput').click()">+ seleccionar archivos</button>
+      <button class="ghost" type="button" onclick="document.getElementById('cajaNegraFolderInput').click()">+ seleccionar carpeta</button>
+    </div>
+    <div id="cajaNegraProgress" class="cajanegra-progress" style="display:none">
+      <div class="cajanegra-progress-bar" id="cajaNegraProgressBar"></div>
+      <div class="cajanegra-progress-text" id="cajaNegraProgressText">procesando...</div>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" type="button" onclick="closeCajaNegraModal()">cerrar</button>
+      <button class="primary" type="button" id="cajaNegraDocumentBtn" onclick="cajaNegraDocumentar()" disabled>cargar al chat</button>
+    </div>
+  </div>
+</div>
+
 <div class="welcome-overlay" id="welcomeOverlay">
   <div class="welcome-box">
-    <div class="welcome-title">DOCGENT</div>
+    <div class="welcome-title">DOCXIX</div>
     <div class="welcome-sub">generador de documentos .docx con IA</div>
     <div class="welcome-body">
       <p>Sistema de generaci&oacute;n de documentos acad&eacute;micos basado en skills (plantillas) y archivos existentes, con inteligencia artificial para estructurar y redactar el contenido.</p>
@@ -177,7 +204,7 @@
     <div class="donate-heart">❤️</div>
     <h2>+ Doname</h2>
     <div class="donate-desc">
-      DocGent es un proyecto de código abierto en constante evolución.<br>
+      DocXIX es un proyecto de código abierto en constante evolución.<br>
       Si te resulta útil, considera donar para ayudar con costos de hosting, APIs y desarrollo.<br>
       <strong>¡Cada aporte, por pequeño que sea, hace crecer el proyecto!</strong>
     </div>
@@ -212,18 +239,5 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="previewOverlay">
-  <div class="modal preview-modal">
-    <div class="preview-header">
-      <span class="preview-filename" id="previewFilename"></span>
-      <span class="preview-size" id="previewSize"></span>
-    </div>
-    <div class="preview-content" id="previewContent">
-      <div class="preview-empty">Cargando...</div>
-    </div>
-    <div class="preview-actions">
-      <button class="ghost" onclick="closePreviewModal()">volver</button>
-      <a class="btn-inline" id="previewDownloadBtn" target="_blank" style="margin-left:auto">descargar</a>
-    </div>
-  </div>
-</div>
+
+

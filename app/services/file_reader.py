@@ -54,6 +54,22 @@ def get_file_summary(filepath: str) -> dict:
     elif ext == ".yaml" or ext == ".yml":
         content = read_text_file(filepath)
         summary = f"Archivo YAML con {len(content.splitlines())} líneas"
+    elif ext == ".docx":
+        try:
+            from docx import Document
+            doc = Document(filepath)
+            paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
+            tables = []
+            for t in doc.tables:
+                for row in t.rows:
+                    cells = [cell.text.strip() for cell in row.cells if cell.text.strip()]
+                    if cells:
+                        tables.extend(cells)
+            content = "\n".join(paragraphs + tables)
+            summary = f"Documento Word con {len(paragraphs)} párrafos y {len(doc.tables)} tabla(s)"
+        except Exception:
+            content = f"[Error al leer .docx: archivo binario no procesable]"
+            summary = "Documento Word (no se pudo extraer texto)"
     else:
         content = read_text_file(filepath)
         summary = f"Archivo {ext} con {len(content.splitlines())} líneas"

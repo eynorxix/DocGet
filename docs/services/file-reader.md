@@ -16,6 +16,7 @@ Lee archivos subidos por el usuario y extrae su contenido para usarlo como conte
 | `.csv` | Texto completo | `Archivo CSV con N filas` |
 | `.json` | Texto completo | `Archivo JSON con N lineas` |
 | `.yaml` / `.yml` | Texto completo | `Archivo YAML con N lineas` |
+| `.docx` | Extrae parrafos y tablas | `Documento Word con N parrafos y M tabla(s)` |
 
 ## Funciones principales
 
@@ -32,3 +33,10 @@ Concatena el contenido de todos los archivos subidos, separado por `=== filename
 ## Ubicacion de archivos
 
 Los archivos se guardan en `data/uploads/`. El directorio se crea automaticamente si no existe.
+
+### Politica de limpieza
+
+- Los archivos subidos se borran automaticamente despues de generar un documento, crear una skill o actualizar una skill
+- Al iniciar el servidor, se limpian todos los uploads existentes
+- La Caja Negra elimina uploads previos antes de subir archivos nuevos
+- Esto evita que archivos temporales se acumulen y afecten generaciones futuras

@@ -153,11 +153,11 @@ def generate_demo():
 
     logo_path = "/home/eynor/Documentos/Biblioteca/logoUnifranz/logounifranz.png"
 
-    demo_content = """# Documento de Prueba DocGent
+    demo_content = """# Documento de Prueba DocXIX
 
 ## 1. Introduccion
 
-Este documento es una **demostracion** de todas las capacidades de generacion de DocGent. Incluye *texto en cursiva*, **texto en negrita**, y combinaciones de **formato *mixto***.
+Este documento es una **demostracion** de todas las capacidades de generacion de DocXIX. Incluye *texto en cursiva*, **texto en negrita**, y combinaciones de **formato *mixto***.
 
 ## 2. Listas y viñetas
 
@@ -216,7 +216,7 @@ Donde **E** representa la eficiencia y los valores se miden en milisegundos.
 
 ## 7. Conclusion
 
-DocGent permite la generacion automatica de documentos .docx con **formato APA 7**, incluyendo:
+DocXIX permite la generacion automatica de documentos .docx con **formato APA 7**, incluyendo:
 
 - Caratula institucional con logo
 - Tabla de contenidos automatica
@@ -230,8 +230,8 @@ DocGent permite la generacion automatica de documentos .docx con **formato APA 7
 """
 
     output_path = document_generator.generate_docx(
-        title="Documento de Prueba DocGent",
-        author="DocGent Demo",
+        title="Documento de Prueba DocXIX",
+        author="DocXIX Demo",
         tutor="Sistema de Pruebas",
         skill_type="md",
         document_content=demo_content,
@@ -260,39 +260,3 @@ def list_documents():
     return files
 
 
-@router.get("/preview/{filename}")
-def preview_document(filename: str):
-    from docx import Document as DocxDocument
-    output_dir = Path(document_generator.OUTPUT_DIR)
-    filepath = output_dir / filename
-    if not filepath.exists():
-        raise HTTPException(status_code=404, detail="Archivo no encontrado")
-    doc = DocxDocument(str(filepath))
-    paragraphs = []
-    for p in doc.paragraphs:
-        runs = []
-        for r in p.runs:
-            runs.append({
-                "text": r.text,
-                "bold": r.bold,
-                "italic": r.italic,
-                "size": r.font.size,
-            })
-        paragraphs.append({
-            "text": p.text,
-            "style": p.style.name if p.style else "Normal",
-            "runs": runs,
-        })
-    tables = []
-    for t in doc.tables:
-        rows = []
-        for row in t.rows:
-            cells = [cell.text for cell in row.cells]
-            rows.append(cells)
-        tables.append(rows)
-    return {
-        "filename": filename,
-        "paragraphs": paragraphs,
-        "tables": tables,
-        "size_kb": round(filepath.stat().st_size / 1024, 2),
-    }

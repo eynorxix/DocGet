@@ -1,6 +1,43 @@
 let chatHistory = [];
 let selectedSkillId = null;
 let activeSection = null;
+let thinkingInterval = null;
+
+function startThinkingAnimation() {
+  hideEmpty();
+  const ws = document.getElementById('workspace');
+  const d = document.createElement('div');
+  d.className = 'entry system thinking-entry';
+  d.innerHTML = '<div class="entry-header"><span class="entry-tag">DOCXIX</span><span class="entry-title"></span><span class="entry-time">ahora</span></div><div class="entry-body"><p class="dim">procesando...</p></div>';
+  ws.appendChild(d);
+  scrollBottom();
+
+  const title = d.querySelector('.entry-title');
+  const total = 8;
+  let pos = 0;
+
+  function update() {
+    let s = '[';
+    for (let i = 0; i < pos; i++) s += '- ';
+    s += 'C';
+    for (let i = pos + 1; i <= total; i++) s += ' o';
+    s += ' ]';
+    title.textContent = s;
+    pos = (pos + 1) % (total + 1);
+  }
+  update();
+  thinkingInterval = setInterval(update, 250);
+  return d;
+}
+
+function removeThinkingEntry() {
+  if (thinkingInterval) {
+    clearInterval(thinkingInterval);
+    thinkingInterval = null;
+  }
+  const e = document.querySelector('.thinking-entry');
+  if (e) e.remove();
+}
 
 function toggleSection(h3){
   const group=h3.parentElement;
@@ -72,7 +109,7 @@ function renderMarkdown(text){
 
 function renderResponse(text, data, action){
   const lines=text.split('\n');
-  let tag='DOCGENT';
+  let tag='DOCXIX';
   let html='';
 
   if(action==='create_skill'&&data?.skill){
@@ -89,7 +126,7 @@ function renderResponse(text, data, action){
     loadSidebar();
   }
   else if(action==='generate_document'&&data?.download_url){
-    html='<p><strong>'+escapeHtml(data.filename)+'</strong></p><div style="display:flex;gap:8px"><a class="btn-inline" href="'+data.download_url+'" target="_blank">descargar .docx</a><button class="btn-inline" onclick="openDocumentPreview(\''+data.download_url+'\',\''+escapeHtml(data.filename)+'\')">visualizar</button></div>';
+    html='<p><strong>'+escapeHtml(data.filename)+'</strong></p><div style="display:flex;gap:8px"><a class="btn-inline" href="'+data.download_url+'" target="_blank">descargar .docx</a><a class="btn-inline" href="'+data.download_url+'" target="_blank">abrir</a></div>';
     loadSidebar();
   }
   else if(action==='request_file_upload'){
@@ -115,7 +152,7 @@ async function handleSend(){
   addEntry('system','TU','','<p>'+escapeHtml(val)+'</p>');
 
   chatHistory.push({role:'user',content:val});
-  addEntry('system','DOCGENT','pensando...','<p class="dim">...</p>');
+  startThinkingAnimation();
 
   try{
     const r=await fetch('/api/chat',{
@@ -127,19 +164,19 @@ async function handleSend(){
 
     const ws=document.getElementById('workspace');
     const last=ws.lastElementChild;
-    if(last&&last.querySelector('.entry-title')?.textContent==='pensando...')last.remove();
+removeThinkingEntry();
 
     chatHistory.push({role:'assistant',content:d.response});
 
     if(d.action){
       renderResponse(d.response,d.data,d.action);
     } else {
-      addEntry('system','DOCGENT','',renderMarkdown(d.response));
+      addEntry('system','DOCXIX','',renderMarkdown(d.response));
     }
   }catch(e){
     const ws=document.getElementById('workspace');
     const last=ws.lastElementChild;
-    if(last&&last.querySelector('.entry-title')?.textContent==='pensando...')last.remove();
+removeThinkingEntry();
     addEntry('error','ERROR','error','<p>No se pudo conectar con el servidor</p>');
   }
 }
@@ -203,6 +240,156 @@ function closeGenModal(){
 }
 
 let btnTimeouts={};
+let cajaNegraFiles=[];
+
+function openCajaNegraModal(){
+  cajaNegraFiles=[];
+  document.getElementById('cajaNegraFileList').innerHTML='';
+  document.getElementById('cajaNegraDocumentBtn').disabled=true;
+  document.getElementById('cajaNegraProgress').style.display='none';
+  document.getElementById('cajaNegraProgressBar').style.width='0%';
+  document.getElementById('cajaNegraOverlay').classList.add('show');
+}
+
+function closeCajaNegraModal(){
+  document.getElementById('cajaNegraOverlay').classList.remove('show');
+  cajaNegraFiles=[];
+}
+
+function handleCajaNegraFileSelect(e){
+  const files=e.target.files;
+  if(!files.length)return;
+  for(const f of files){
+    const key=f.webkitRelativePath||f.name;
+    if(!cajaNegraFiles.some(x=>x.name===key)){
+      cajaNegraFiles.push({name:key,file:f});
+    }
+  }
+  renderCajaNegraFileList();
+  e.target.value='';
+}
+
+function renderCajaNegraFileList(){
+  const list=document.getElementById('cajaNegraFileList');
+  if(cajaNegraFiles.length===0){
+    list.innerHTML='';
+    document.getElementById('cajaNegraDocumentBtn').disabled=true;
+    return;
+  }
+  document.getElementById('cajaNegraDocumentBtn').disabled=false;
+  list.innerHTML='<div class="cajanegra-filelist-header">'+cajaNegraFiles.length+' archivo(s)</div>'+
+    cajaNegraFiles.map((f,i)=>'<div class="cajanegra-file-item"><span class="cajanegra-file-icon">📄</span><span class="cajanegra-file-name">'+escapeHtml(f.name)+'</span><span class="cajanegra-file-remove" onclick="cajaNegraRemoveFile('+i+')">&times;</span></div>').join('');
+}
+
+function cajaNegraRemoveFile(i){
+  cajaNegraFiles.splice(i,1);
+  renderCajaNegraFileList();
+}
+
+function buildProjectTree(paths){
+  const tree={};
+  for(const p of paths){
+    const parts=p.split('/');
+    let node=tree;
+    for(let i=0;i<parts.length;i++){
+      if(i===parts.length-1){
+        node[parts[i]]=null;
+      }else{
+        if(!node[parts[i]])node[parts[i]]={};
+        node=node[parts[i]];
+      }
+    }
+  }
+  function render(node,indent){
+    let s='';
+    const keys=Object.keys(node).sort();
+    for(const k of keys){
+      if(node[k]===null){
+        s+=indent+'  '+k+'\n';
+      }else{
+        s+=indent+'  '+k+'/\n';
+        s+=render(node[k],indent+'  ');
+      }
+    }
+    return s;
+  }
+  return render(tree,'');
+}
+
+async function cajaNegraDocumentar(){
+  const btn=document.getElementById('cajaNegraDocumentBtn');
+  const progress=document.getElementById('cajaNegraProgress');
+  const bar=document.getElementById('cajaNegraProgressBar');
+  const text=document.getElementById('cajaNegraProgressText');
+
+  btn.disabled=true;
+  btn.textContent='subiendo...';
+  progress.style.display='block';
+  bar.style.width='10%';
+  text.textContent='subiendo '+cajaNegraFiles.length+' archivo(s)...';
+
+  // Limpiar uploads anteriores de caja negra
+  try{
+    const oldUploads=await (await fetch('/api/documents/uploads')).json();
+    for(const u of oldUploads){
+      await fetch('/api/documents/uploads/'+encodeURIComponent(u.filename),{method:'DELETE'});
+    }
+  }catch(e){}
+
+  const uploadedPaths=[];
+  const totalFiles=cajaNegraFiles.length;
+
+  try{
+    for(let i=0;i<cajaNegraFiles.length;i++){
+      const f=cajaNegraFiles[i];
+      const safeName=f.name.replace(/[\/\\]/g,'_');
+      const fd=new FormData();
+      fd.append('file',f.file,safeName);
+
+      text.textContent='subiendo ('+(i+1)+'/'+totalFiles+') '+f.name;
+      bar.style.width=((i+1)/totalFiles*70)+'%';
+
+      const r=await fetch('/api/documents/upload',{method:'POST',body:fd});
+      if(!r.ok)throw new Error('Error al subir '+f.name+': '+r.status);
+      const d=await r.json();
+
+      uploadedPaths.push({name:f.name,preview:d.preview||''});
+      addEntry('file','ARCHIVO','subido: '+escapeHtml(f.name),
+        '<p>Archivo <strong>'+escapeHtml(f.name)+'</strong> ('+d.size_kb+' KB)</p><pre>'+escapeHtml((d.preview||'').slice(0,300))+'</pre>');
+      chatHistory.push({role:'user',content:'SISTEMA: El usuario subió el archivo "'+f.name+'". Contenido:\n```\n'+(d.preview||'')+'\n```'});
+    }
+
+    const tree=buildProjectTree(cajaNegraFiles.map(f=>f.name));
+
+    bar.style.width='90%';
+    text.textContent='archivos cargados, consultando IA...';
+
+    closeCajaNegraModal();
+
+    const msg='SISTEMA: El usuario cargó '+totalFiles+' archivo(s) desde Caja Negra.\n\nEstructura del proyecto:\n'+tree+'\n\nPregúntale qué desea hacer con estos archivos.';
+    chatHistory.push({role:'user',content:msg});
+    addEntry('system','CAJA NEGRA','archivos cargados','<p>Se cargaron <strong>'+totalFiles+'</strong> archivo(s).</p><pre style="font-size:11px;line-height:1.4;color:var(--text2)">'+escapeHtml(tree)+'</pre>');
+    startThinkingAnimation();
+
+    const chatRes=await fetch('/api/chat',{
+      method:'POST',
+      headers:getHeaders(),
+      body:JSON.stringify({message:msg,history:chatHistory.slice(-20)})
+    });
+    const chatData=await chatRes.json();
+
+    removeThinkingEntry();
+
+    chatHistory.push({role:'assistant',content:chatData.response});
+    addEntry('system','DOCXIX','',renderMarkdown(chatData.response));
+
+  }catch(e){
+    addEntry('error','ERROR','caja negra','<p>'+escapeHtml(e.message||'Error desconocido')+'</p>');
+    progress.style.display='none';
+    btn.disabled=false;
+    btn.textContent='cargar al chat';
+  }
+}
 
 function toggleBtn(e,el,action){
   if(el.classList.contains('expanded')){
@@ -261,7 +448,7 @@ async function selectSkillFromSelector(id,name){
 
   chatHistory.push({role:'user',content:msg});
   addEntry('system','TU','','<p>SISTEMA: Skill seleccionada: <strong>'+escapeHtml(name)+'</strong></p>');
-  addEntry('system','DOCGENT','pensando...','<p class="dim">...</p>');
+  startThinkingAnimation();
 
   try{
     const r=await fetch('/api/chat',{
@@ -272,13 +459,13 @@ async function selectSkillFromSelector(id,name){
     const d=await r.json();
     const ws=document.getElementById('workspace');
     const last=ws.lastElementChild;
-    if(last&&last.querySelector('.entry-title')?.textContent==='pensando...')last.remove();
+removeThinkingEntry();
     chatHistory.push({role:'assistant',content:d.response});
-    addEntry('system','DOCGENT','',renderMarkdown(d.response));
+    addEntry('system','DOCXIX','',renderMarkdown(d.response));
   }catch(e){
     const ws=document.getElementById('workspace');
     const last=ws.lastElementChild;
-    if(last&&last.querySelector('.entry-title')?.textContent==='pensando...')last.remove();
+removeThinkingEntry();
     addEntry('error','ERROR','error','<p>No se pudo procesar la skill</p>');
   }
 }
@@ -330,11 +517,13 @@ function getHeaders(extra){
   if(caratula.titulo||caratula.autor||caratula.tutor){
     h['X-Caratula']=JSON.stringify(caratula);
   }
+  const modelo=localStorage.getItem('docxix_modelo')||'docxix';
+  h['X-Modelo']=modelo;
   return h;
 }
 
 function getCaratula(){
-  try{return JSON.parse(sessionStorage.getItem('docgent_caratula')||'{}')}catch{return {}}
+  try{return JSON.parse(sessionStorage.getItem('docxix_caratula')||'{}')}catch{return {}}
 }
 
 function saveCaratula(){
@@ -343,7 +532,7 @@ function saveCaratula(){
     autor: document.getElementById('caratulaAutor').value.trim(),
     tutor: document.getElementById('caratulaTutor').value.trim(),
   };
-  sessionStorage.setItem('docgent_caratula',JSON.stringify(d));
+  sessionStorage.setItem('docxix_caratula',JSON.stringify(d));
   ['caratulaTitulo','caratulaAutor','caratulaTutor'].forEach(id=>{
     const el=document.getElementById(id);
     el.classList.toggle('filled',el.value.trim()!=='');
@@ -362,7 +551,7 @@ function loadCaratula(){
 }
 
 async function generateDemoDoc(){
-  addEntry('system','DOCGENT','generando demo...','<p class="dim">Generando documento de prueba con todas las funcionalidades...</p>');
+  addEntry('system','DOCXIX','generando demo...','<p class="dim">Generando documento de prueba con todas las funcionalidades...</p>');
   try{
     const r=await fetch('/api/documents/generate-demo',{method:'POST'});
     const d=await r.json();
@@ -372,7 +561,7 @@ async function generateDemoDoc(){
     addEntry('doc','DOC','demo: '+d.filename,
       '<p><strong>'+escapeHtml(d.filename)+'</strong> — Documento de prueba con tablas, indices, viñetas, formato APA</p><div style="display:flex;gap:8px">'+
       '<a class="btn-inline" href="'+d.download_url+'" target="_blank">descargar .docx</a>'+
-      '<button class="btn-inline" onclick="openDocumentPreview(\''+d.download_url+'\',\''+escapeHtml(d.filename)+'\')">visualizar</button></div>'
+      '<a class="btn-inline" href="'+d.download_url+'" target="_blank">abrir</a></div>'
     );
     loadSidebar();
   }catch(e){
@@ -401,7 +590,7 @@ function applyApiKeys(){
   const keys=[1,2,3,4].map(i=>document.getElementById('apiKey'+i).value.trim()).filter(k=>k!=='');
   saveApiKeys(keys);
   closeApiKeysModal();
-  addEntry('system','DOCGENT','API keys','<p>'+(keys.length>0?keys.length+' API key(s) guardada(s). Si una falla por cuota, se usa la siguiente.':'No se guardaron API keys.')+'</p>');
+  addEntry('system','DOCXIX','API keys','<p>'+(keys.length>0?keys.length+' API key(s) guardada(s). Si una falla por cuota, se usa la siguiente.':'No se guardaron API keys.')+'</p>');
 }
 
 function acceptWelcome(){
@@ -496,32 +685,56 @@ function confirmDeleteSkill(){
   deleteConfirmActive=false;
 }
 
-function changeGif(){
-  const hint='https://giphy.com/search/anime';
-  const url=prompt('Pega el enlace del GIF de Giphy (ve a '+hint+', elige uno, copia su enlace):',localStorage.getItem('sidebar_gif_url')||hint);
-  if(url&&url.trim()){
-    const img=document.getElementById('sidebarGif');
-    if(img){
-      const gifUrl=url.trim().startsWith('http')?url.trim():hint;
-      img.src=gifUrl;
-      localStorage.setItem('sidebar_gif_url',gifUrl);
-    }
-  }
+function setTheme(name){
+  document.body.dataset.theme=name;
+  localStorage.setItem('docxix_theme',name);
+  document.querySelectorAll('.theme-option').forEach(el=>{
+    el.classList.toggle('active',el.dataset.theme===name);
+  });
 }
 
-function loadGif(){
-  const saved=localStorage.getItem('sidebar_gif_url');
-  if(saved){
-    const img=document.getElementById('sidebarGif');
-    if(img)img.src=saved;
+function loadTheme(){
+  const saved=localStorage.getItem('docxix_theme');
+  if(saved)setTheme(saved);
+}
+
+function activateModeloCode(){
+  const input=document.getElementById('modeloCodeInput');
+  const msg=document.getElementById('modeloMsg');
+  const code=input.value.trim();
+  if(!code){msg.textContent='ingresa un codigo';return}
+  if(code.toLowerCase()==='cangrejo'){
+    localStorage.setItem('docxix_modelo','cangrejo');
+    document.getElementById('modeloStatus').textContent='cangrejo (personal)';
+    msg.textContent='✓ modelo personal activado';
+    msg.style.color='var(--accent)';
+  }else{
+    msg.textContent='✗ codigo no valido';
+    msg.style.color='var(--danger)';
+  }
+  input.value='';
+}
+
+function resetModelo(){
+  localStorage.setItem('docxix_modelo','docxix');
+  document.getElementById('modeloStatus').textContent='docxix';
+  document.getElementById('modeloMsg').textContent='modelo restablecido a defecto';
+  document.getElementById('modeloMsg').style.color='var(--text3)';
+}
+
+function loadModeloState(){
+  const saved=localStorage.getItem('docxix_modelo');
+  if(saved && saved!=='docxix'){
+    document.getElementById('modeloStatus').textContent=saved+' (personal)';
   }
 }
 
 function initApp(){
   loadCaratula();
   loadSidebar();
-  loadGif();
-  addEntry('system','DOCGENT','sistema listo','<p>¡Hola! Soy DocGent, tu asistente para generar documentos <code>.docx</code>. ¿En qué puedo ayudarte?</p><p class="dim">Puedes pedirme: crear/editar skills, generar documentos, subir archivos, etc.</p>');
+  loadTheme();
+  loadModeloState();
+  addEntry('system','DOCXIX','sistema listo','<p>¡Hola! Soy DocXIX, tu asistente para generar documentos <code>.docx</code>. ¿En qué puedo ayudarte?</p><p class="dim">Puedes pedirme: crear/editar skills, generar documentos, subir archivos, etc.</p>');
 }
 
 function openDonateModal(){
@@ -557,49 +770,6 @@ function closeLightbox(){
   clearTimeout(lightboxTimer);
 }
 
-function openDocumentPreview(downloadUrl, filename){
-  const overlay=document.getElementById('previewOverlay');
-  document.getElementById('previewFilename').textContent=filename;
-  document.getElementById('previewDownloadBtn').href=downloadUrl;
-  document.getElementById('previewContent').innerHTML='<div class="preview-empty">Cargando...</div>';
-  overlay.classList.add('show');
-
-  const previewUrl='/api/documents/preview/'+encodeURIComponent(filename);
-  fetch(previewUrl)
-    .then(r=>r.json())
-    .then(data=>{
-      document.getElementById('previewSize').textContent=data.size_kb+' KB';
-      let html='';
-      for(const p of data.paragraphs){
-        const style=p.style||'Normal';
-        if(style.startsWith('Heading')||style.startsWith('Título')){
-          html+='<div class="preview-heading">'+escapeHtml(p.text)+'</div>';
-        }else if(p.text.trim()){
-          html+='<p>'+escapeHtml(p.text)+'</p>';
-        }
-      }
-      for(const t of data.tables){
-        if(t.length<2)continue;
-        html+='<table class="preview-table">';
-        html+='<tr>'+t[0].map(c=>'<th>'+escapeHtml(c)+'</th>').join('')+'</tr>';
-        for(let i=1;i<t.length;i++){
-          html+='<tr>'+t[i].map(c=>'<td>'+escapeHtml(c)+'</td>').join('')+'</tr>';
-        }
-        html+='</table>';
-      }
-      const content=document.getElementById('previewContent');
-      content.innerHTML=html||'<div class="preview-empty">Sin contenido visible</div>';
-      content.scrollTop=0;
-    })
-    .catch(()=>{
-      document.getElementById('previewContent').innerHTML='<div class="preview-empty">Error al cargar la vista previa</div>';
-    });
-}
-
-function closePreviewModal(){
-  document.getElementById('previewOverlay').classList.remove('show');
-}
-
 function getLastUserMessage(){
   for(let i=chatHistory.length-1;i>=0;i--){
     if(chatHistory[i].role==='user'&&!chatHistory[i].content.startsWith('SISTEMA:')){
@@ -627,7 +797,7 @@ async function handleGenerateDirect(e){
   const tutor=caratula.tutor||'';
   const topic=getLastUserMessage()||title;
 
-  addEntry('system','DOCGENT','generando...','<p class="dim">Buscando informacion en internet y generando documento...</p>');
+  addEntry('system','DOCXIX','generando...','<p class="dim">Buscando informacion en internet y generando documento...</p>');
 
   try{
     const r=await fetch('/api/documents/generate-direct',{
@@ -644,7 +814,7 @@ async function handleGenerateDirect(e){
     addEntry('doc','DOC','generado: '+d.filename,
       '<p><strong>'+escapeHtml(d.filename)+'</strong></p><div style="display:flex;gap:8px">'+
       '<a class="btn-inline" href="'+d.download_url+'" target="_blank">descargar .docx</a>'+
-      '<button class="btn-inline" onclick="openDocumentPreview(\''+d.download_url+'\',\''+escapeHtml(d.filename)+'\')">visualizar</button></div>'
+      '<a class="btn-inline" href="'+d.download_url+'" target="_blank">abrir</a></div>'
     );
     loadSidebar();
   }catch(e){
@@ -685,5 +855,24 @@ function init(){
       handleSkillFileSelect({target:input});
     }
   });
+  const cdz=document.getElementById('cajaNegraDropZone');
+  if(cdz){
+    cdz.addEventListener('dragover',e=>{e.preventDefault();cdz.classList.add('drag-over')});
+    cdz.addEventListener('dragleave',()=>cdz.classList.remove('drag-over'));
+    cdz.addEventListener('drop',e=>{
+      e.preventDefault();
+      cdz.classList.remove('drag-over');
+      if(e.dataTransfer.files.length){
+        for(const f of e.dataTransfer.files){
+          const key=f.webkitRelativePath||f.name;
+          if(!cajaNegraFiles.some(x=>x.name===key)){
+            cajaNegraFiles.push({name:key,file:f});
+          }
+        }
+        renderCajaNegraFileList();
+      }
+    });
+    cdz.addEventListener('click',()=>document.getElementById('cajaNegraFileInput').click());
+  }
 }
 init();

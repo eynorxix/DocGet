@@ -23,12 +23,12 @@ def _get_available_keys(keys: list[str]) -> list[str]:
 def generate_document_content(skill_content: str, uploaded_content: str, user_input: str, api_keys: list[str] | None = None) -> str:
     keys = api_keys or ([GEMINI_API_KEY] if GEMINI_API_KEY else [])
     if not keys:
-        return _fallback_content(user_input)
+        return _fallback_web_content(user_input)
 
     import httpx
 
     web_context = ""
-    if user_input.strip():
+    if user_input and user_input.strip():
         try:
             results = web_search.search_web(user_input, max_results=5)
             if results:
@@ -57,10 +57,11 @@ def generate_document_content(skill_content: str, uploaded_content: str, user_in
 ## INSTRUCCIÓN DEL USUARIO:
 {user_input}
 
-Genera el contenido completo del documento siguiendo ESTRICTAMENTE la estructura definida en la SKILL.
-Usa la información de internet y archivos subidos como fuente de datos para crear un documento más rico y actualizado.
-Usa formato Markdown limpio. Incluye títulos, subtítulos, párrafos y listas donde corresponda.
-No agregues notas ni explicaciones adicionales fuera del contenido solicitado."""
+ Genera el contenido completo del documento siguiendo ESTRICTAMENTE la estructura definida en la SKILL.
+ Comienza con un título descriptivo (max 20 palabras) usando `# Título del Documento`.
+ Usa la información de internet y archivos subidos como fuente de datos para crear un documento más rico y actualizado.
+ Usa formato Markdown limpio. Incluye títulos, subtítulos, párrafos y listas donde corresponda.
+ No agregues notas ni explicaciones adicionales fuera del contenido solicitado."""
 
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     last_error = ""

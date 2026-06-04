@@ -45,6 +45,12 @@ Cuando Gemini responde con `---TOOL---`, el servicio:
 4. Formatea el resultado
 5. Lo devuelve como parte del response
 
+### Limpieza automatica de uploads
+
+Despues de ejecutar `generate_document`, `create_skill` o `update_skill`, el sistema llama a `_cleanup_uploads()` que elimina todos los archivos en `data/uploads/`. Esto evita que archivos temporales (subidos via Caja Negra o como contexto) persistan y contaminen generaciones futuras.
+
+Los archivos subidos via Caja Negra tambien se limpian al abrir una nueva sesion de Caja Negra (el frontend elimina uploads previos antes de subir nuevos).
+
 ## Rotacion de API Keys
 
 - Mantiene un diccionario compartido `_key_cooldowns` con timestamps de cooldown
