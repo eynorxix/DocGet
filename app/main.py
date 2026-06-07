@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,10 +20,22 @@ from app.services import file_reader
 ASSETS_DIR = ROOT / "assets"
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    upload_dir = file_reader.UPLOAD_DIR
+    if upload_dir.exists():
+        for f in upload_dir.iterdir():
+            if f.is_file():
+                f.unlink()
+    yield
+
+
 app = FastAPI(
     title="DocXIX",
     description="Generador de documentos .docx con Skills e IA",
     version="1.0.0",
+    lifespan=lifespan,
 )
 
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -36,16 +49,6 @@ app.include_router(skills.router)
 app.include_router(documents.router)
 app.include_router(chat.router)
 app.include_router(modelos.router)
-
-
-@app.on_event("startup")
-def cleanup_uploads():
-    import shutil
-    upload_dir = file_reader.UPLOAD_DIR
-    if upload_dir.exists():
-        for f in upload_dir.iterdir():
-            if f.is_file():
-                f.unlink()
 
 
 @app.get("/", response_class=HTMLResponse)
